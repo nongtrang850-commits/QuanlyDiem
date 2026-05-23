@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sinh viên - Quản lý Điểm</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand"> Quản lý Điểm<br><small style="opacity:.7;font-weight:400" id="svNameBadge">Sinh viên</small></div>
+    <nav>
+      <a href="#" class="active" onclick="showTab('diem')"> Bảng điểm</a>
+      <a href="#" onclick="showTab('ai')"> Học lực AI</a>
+      <a href="#" onclick="showTab('monhoc')"> Môn học</a>
+      <a href="#" onclick="showTab('dangky')"> Đăng ký môn</a>
+      <a href="#" onclick="showTab('hoso')"> Hồ sơ</a>
+      <a href="#" onclick="openDoiMK()" style="margin-top:1rem"> Đổi mật khẩu</a>
+      <a href="#" onclick="logout()" style="color:#ff8a80"> Đăng xuất</a>
+    </nav>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar"><h1 id="pageTitle">Bảng điểm</h1></div>
+    <div class="page">
+
+      <!-- ĐIỂM -->
+      <div id="tab-diem">
+        <div id="bangDiemTichLuy"></div>
+      </div>
+
+      <!-- AI -->
+      <div id="tab-ai" style="display:none">
+
+        <!-- Thẻ GPA + xếp loại + nhận xét -->
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Đánh giá học lực tích lũy</div>
+          <div id="aiResult"><p style="color:#888;padding:.5rem 0">Đang tải...</p></div>
+        </div>
+
+        <!-- Biểu đồ GPA theo học kỳ -->
+        <div class="card" style="margin-bottom:1rem" id="aiChartCard" style="display:none">
+          <div class="card-title">Biểu đồ GPA theo học kỳ</div>
+          <canvas id="chartGpaHK" style="max-height:260px"></canvas>
+        </div>
+
+        <!-- Bảng phân tích từng học kỳ -->
+        <div class="card" id="aiDetailCard" style="display:none">
+          <div class="card-title">Chi tiết theo học kỳ</div>
+          <div class="table-wrap">
+            <table id="tableAIDetail">
+              <thead>
+                <tr>
+                  <th>Học kỳ</th>
+                  <th style="text-align:center">GPA</th>
+                  <th style="text-align:center">Xếp loại</th>
+                  <th style="text-align:center">Số TC</th>
+                  <th style="text-align:center">Xu hướng</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- MÔN HỌC -->
+      <div id="tab-monhoc" style="display:none">
+        <div class="card">
+          <div class="card-title">Danh sách môn học theo học kỳ</div>
+          <div style="margin-bottom:.75rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+            <label style="font-size:.85rem;color:#666">Lọc học kỳ:</label>
+            <select id="filterHKMonHoc" onchange="filterMonHocByHK()">
+              <option value="">-- Tất cả --</option>
+              <option value="1">Học kỳ 1</option><option value="2">Học kỳ 2</option>
+              <option value="3">Học kỳ 3</option><option value="4">Học kỳ 4</option>
+              <option value="5">Học kỳ 5</option><option value="6">Học kỳ 6</option>
+              <option value="7">Học kỳ 7</option><option value="8">Học kỳ 8</option>
+            </select>
+          </div>
+          <div id="monHocByHK"></div>
+        </div>
+      </div>
+
+      <!-- ĐĂNG KÝ MÔN HỌC -->
+      <div id="tab-dangky" style="display:none">
+        <div class="card">
+          <div class="card-title">Đăng ký môn học</div>
+          <p style="font-size:.86rem;color:#666;margin-bottom:.75rem">Chọn môn học và gửi yêu cầu đăng ký. Admin sẽ duyệt trước khi môn học được xác nhận.</p>
+          <div style="display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:1rem">
+            <div style="flex:1;min-width:220px">
+              <label style="font-size:.82rem;color:#666;display:block;margin-bottom:.25rem">Chọn môn học</label>
+              <select id="selectMonDangKy" style="width:100%">
+                <option value="">-- Chọn môn học --</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="dangKyMon()">Đăng ký</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Danh sách đăng ký của tôi</div>
+          <div class="table-wrap">
+            <table id="tableDangKy">
+              <thead><tr><th>Môn học</th><th>Học kỳ</th><th>Tín chỉ</th><th>Ngày đăng ký</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+              <tbody><tr><td colspan="6" style="text-align:center;color:#888">Chưa có đăng ký nào</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- HỒ SƠ -->
+      <div id="tab-hoso" style="display:none">
+        <!-- Thông tin học tập (do Admin quản lý, chỉ xem) -->
+        <div class="card">
+          <div class="card-title">Thông tin sinh viên</div>
+          <div id="profileView"></div>
+        </div>
+
+        <!-- Thông tin cá nhân (sinh viên tự cập nhật) -->
+        <div class="card">
+          <div class="card-title">Thông tin cá nhân</div>
+          <div id="personalView"></div>
+          <div style="margin-top:1rem">
+            <button class="btn btn-warning" onclick="toggleEditProfile()">✏ Chỉnh sửa</button>
+          </div>
+        </div>
+
+        <div class="card" id="profileEditCard" style="display:none">
+          <div class="card-title">Cập nhật thông tin cá nhân</div>
+          <div class="form-row">
+            <div class="form-group"><label>Họ tên *</label><input id="pfFullName" placeholder="Nguyễn Văn A"></div>
+            <div class="form-group"><label>Ngày sinh</label><input id="pfDob" type="date"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Giới tính</label>
+              <select id="pfGender"><option value="">--</option><option>Nam</option><option>Nữ</option></select>
+            </div>
+            <div class="form-group"><label>Số điện thoại</label><input id="pfPhone" placeholder="0xxxxxxxxx"></div>
+          </div>
+          <p style="font-size:.82rem;color:#999;margin-top:.25rem">Lớp, Khoa, Khóa do nhà trường quản lý — liên hệ Admin để thay đổi.</p>
+          <div style="display:flex;gap:.75rem;margin-top:.75rem">
+            <button class="btn btn-primary" onclick="saveProfile()">Lưu thay đổi</button>
+            <button class="btn" onclick="toggleEditProfile()">Hủy</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal Đổi mật khẩu -->
+<div class="modal-overlay" id="modalDoiMK">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <h3> Đổi mật khẩu</h3>
+      <button class="modal-close" onclick="closeDoiMK()">×</button>
+    </div>
+    <div class="form-group"><label>Mật khẩu hiện tại</label><input id="mkCu" type="password"></div>
+    <div class="form-group"><label>Mật khẩu mới</label><input id="mkMoi" type="password"></div>
+    <div class="form-group"><label>Nhập lại mật khẩu mới</label><input id="mkNhapLai" type="password"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeDoiMK()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveDoiMK()">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+let svId = null; // set from /profile (JWT-authoritative), not localStorage
+
+window.onload = async () => {
+  await loadProfile();
+  if (!svId) {
+    document.querySelector('.page').innerHTML =
+      '<div class="alert alert-error">Tài khoản chưa được liên kết với hồ sơ sinh viên. Vui lòng liên hệ Admin.</div>';
+    return;
+  }
+  loadBangDiem();
+};
+
+function showTab(tab) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('tab-' + tab).style.display = '';
+  const titles = {diem:'Bảng điểm', ai:'Học lực AI', monhoc:'Môn học', dangky:'Đăng ký môn học', hoso:'Hồ sơ cá nhân'};
+  document.getElementById('pageTitle').textContent = titles[tab] || '';
+  if (tab === 'ai') loadAI();
+  if (tab === 'monhoc') loadMonHoc();
+  if (tab === 'dangky') loadDangKy();
+  if (tab === 'hoso') loadProfile();
+}
+
+const rankMap = {Giỏi:'gioi',Khá:'kha','Trung bình':'tb',Yếu:'yeu'};
+
+// Xếp loại chữ từng môn (A/B/C/D/F)
+function xepLoaiMon(diem) {
+  if (diem >= 8.5) return 'A';
+  if (diem >= 7.0) return 'B';
+  if (diem >= 5.5) return 'C';
+  if (diem >= 4.0) return 'D';
+  return 'F';
+}
+
+async function loadBangDiem() {
+  if (!svId) return;
+  const container = document.getElementById('bangDiemTichLuy');
+  try {
+    const data = await api.get('/diem/bang-diem-tich-luy/' + svId);
+
+    if (!data.hocKys || !data.hocKys.length) {
+      container.innerHTML = '<div class="card"><div class="card-title">Bảng điểm của tôi</div><p style="color:#888;padding:.5rem 0">Chưa có dữ liệu điểm.</p></div>';
+      return;
+    }
+
+    // Thẻ GPA tích lũy
+    const rankClass = rankMap[data.xepLoaiTichLuy] || 'tb';
+    let html = `
+      <div class="card" style="border-left:4px solid var(--primary);margin-bottom:1rem">
+        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+          <div>
+            <div style="font-size:.8rem;color:#888;margin-bottom:.2rem">GPA tích lũy</div>
+            <div class="gpa-big" style="font-size:2.5rem">${data.gpaTichLuy.toFixed(2)}<span style="font-size:1rem;color:#888">/10</span></div>
+          </div>
+          <div>
+            <span class="badge badge-${rankClass}" style="font-size:.95rem;padding:.4rem 1rem">${data.xepLoaiTichLuy}</span>
+            <div style="color:#777;font-size:.83rem;margin-top:.4rem">Tổng tín chỉ tích lũy: <b>${data.tongTinChiTichLuy}</b></div>
+          </div>
+        </div>
+      </div>`;
+
+    // Từng học kỳ
+    for (const hk of data.hocKys) {
+      const hkClass = rankMap[hk.xepLoai] || 'tb';
+      html += `
+        <div class="card" style="margin-bottom:1rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
+            <div class="card-title" style="margin:0">Học kỳ ${hk.hocKy}</div>
+            <div style="display:flex;align-items:center;gap:.75rem">
+              <span style="font-size:.85rem;color:#555"><b>${hk.tongTinChi}</b> tín chỉ</span>
+              <span style="font-size:.85rem;color:#555">GPA: <b>${hk.gpaHocKy.toFixed(2)}</b></span>
+              <span class="badge badge-${hkClass}">${hk.xepLoai}</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Môn học</th><th>TC</th><th>CC</th><th>KT TB</th><th>Thi</th><th>Tổng kết</th><th>Xếp loại</th></tr></thead>
+              <tbody>
+                ${hk.diems.map(d => {
+                  const fmt = v => v != null ? v : '—';
+                  const ktTb = (d.kT1 != null && d.kT2 != null && d.kT3 != null)
+                    ? ((d.kT1 + d.kT2 + d.kT3) / 3).toFixed(1) : '—';
+                  const dtkHtml = d.diemTongKet != null
+                    ? `<strong>${d.diemTongKet.toFixed(2)}</strong>`
+                    : '<span style="color:#aaa">—</span>';
+                  const loaiHtml = d.diemTongKet != null
+                    ? `<span class="badge badge-${xepLoaiMon(d.diemTongKet)}">${xepLoaiMon(d.diemTongKet)}</span>`
+                    : '';
+                  return `<tr>
+                    <td>${d.monHocName}</td><td>${d.credits}</td><td>${fmt(d.cc)}</td>
+                    <td>${ktTb}</td><td>${fmt(d.exam)}</td>
+                    <td>${dtkHtml}</td>
+                    <td>${loaiHtml}</td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = '<div class="card"><p style="color:#888">Chưa có dữ liệu điểm.</p></div>';
+  }
+}
+
+let gpaChartInstance = null;
+
+async function loadAI() {
+  if (!svId) return;
+  const res = document.getElementById('aiResult');
+
+  // Load song song: đánh giá AI + bảng điểm tích lũy (cho chart)
+  const [aiData, bangDiem] = await Promise.allSettled([
+    api.get('/diem/danh-gia-ai/' + svId),
+    api.get('/diem/bang-diem-tich-luy/' + svId)
+  ]);
+
+  // --- Khối kết quả AI ---
+  if (aiData.status === 'fulfilled') {
+    const d = aiData.value;
+    const rankColor = {Giỏi:'#43a047',Khá:'#1a73e8','Trung bình':'#fb8c00',Yếu:'#e53935'};
+    const color = rankColor[d.rank] || '#7c3aed';
+    const warnHtml = d.rank === 'Yếu'
+      ? `<div style="background:#fff3f3;border:1px solid #ffcdd2;border-radius:8px;padding:.7rem 1rem;margin-top:.75rem;font-size:.86rem;color:#c62828">
+           Bạn đang trong tình trạng học lực yếu. Hãy liên hệ giảng viên cố vấn ngay để được hỗ trợ.
+         </div>`
+      : '';
+    res.innerHTML = `
+      <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:1rem">
+        <div>
+          <div style="font-size:.78rem;color:#888;margin-bottom:.15rem">GPA tích lũy</div>
+          <div class="gpa-big" style="font-size:3rem;color:${color}">${d.gpa.toFixed(2)}<span style="font-size:1.1rem;color:#bbb">/10</span></div>
+        </div>
+        <div>
+          <span class="badge badge-${({Giỏi:'gioi',Khá:'kha','Trung bình':'tb',Yếu:'yeu'}[d.rank]||'tb')}" style="font-size:1rem;padding:.4rem 1.1rem">${d.rank}</span>
+        </div>
+      </div>
+      <div style="background:#f8f4ff;border-left:4px solid ${color};border-radius:0 8px 8px 0;padding:.8rem 1.1rem;font-size:.92rem;line-height:1.7;color:#333">
+        <span style="font-weight:700;color:var(--primary)">Nhận xét AI: </span>${d.aiComment || 'Chưa có nhận xét.'}
+      </div>
+      ${warnHtml}`;
+  } else {
+    res.innerHTML = `<div class="alert alert-error">Chưa có đánh giá AI. Vui lòng liên hệ giảng viên hoặc Admin để được đánh giá.</div>`;
+  }
+
+  // --- Chart & bảng chi tiết học kỳ ---
+  if (bangDiem.status === 'fulfilled' && bangDiem.value.hocKys?.length) {
+    const hks = bangDiem.value.hocKys;
+    document.getElementById('aiChartCard').style.display = '';
+    document.getElementById('aiDetailCard').style.display = '';
+
+    // Vẽ biểu đồ
+    const ctx = document.getElementById('chartGpaHK').getContext('2d');
+    if (gpaChartInstance) gpaChartInstance.destroy();
+    gpaChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: hks.map(h => 'HK ' + h.hocKy),
+        datasets: [{
+          label: 'GPA',
+          data: hks.map(h => h.gpaHocKy.toFixed(2)),
+          backgroundColor: hks.map(h =>
+            h.gpaHocKy >= 8.5 ? '#43a04799' :
+            h.gpaHocKy >= 7.0 ? '#1a73e899' :
+            h.gpaHocKy >= 5.0 ? '#fb8c0099' : '#e5393599'),
+          borderColor: hks.map(h =>
+            h.gpaHocKy >= 8.5 ? '#43a047' :
+            h.gpaHocKy >= 7.0 ? '#1a73e8' :
+            h.gpaHocKy >= 5.0 ? '#fb8c00' : '#e53935'),
+          borderWidth: 2,
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { min: 0, max: 10, ticks: { stepSize: 2 }, grid: { color: '#f0f0f0' } },
+          x: { grid: { display: false } }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => 'GPA: ' + ctx.raw } }
+        }
+      }
+    });
+
+    // Bảng chi tiết
+    const rankMap = {Giỏi:'gioi',Khá:'kha','Trung bình':'tb',Yếu:'yeu'};
+    const tbody = document.querySelector('#tableAIDetail tbody');
+    tbody.innerHTML = hks.map((h, i) => {
+      const prev = i > 0 ? hks[i-1].gpaHocKy : null;
+      const delta = prev !== null ? h.gpaHocKy - prev : null;
+      const trend = delta === null ? '—'
+        : delta > 0.1 ? `<span style="color:#43a047">▲ +${delta.toFixed(2)}</span>`
+        : delta < -0.1 ? `<span style="color:#e53935">▼ ${delta.toFixed(2)}</span>`
+        : `<span style="color:#888">= ±0</span>`;
+      return `<tr>
+        <td><strong>Học kỳ ${h.hocKy}</strong></td>
+        <td style="text-align:center;font-weight:700">${h.gpaHocKy.toFixed(2)}</td>
+        <td style="text-align:center"><span class="badge badge-${rankMap[h.xepLoai]||'tb'}">${h.xepLoai}</span></td>
+        <td style="text-align:center">${h.tongTinChi} TC</td>
+        <td style="text-align:center">${trend}</td>
+      </tr>`;
+    }).join('');
+  } else {
+    document.getElementById('aiChartCard').style.display = 'none';
+    document.getElementById('aiDetailCard').style.display = 'none';
+  }
+}
+
+let allMonHoc = [];
+
+async function loadMonHoc() {
+  if (!svId) return;
+  try {
+    // Chỉ lấy môn học sinh viên đã đăng ký (có điểm)
+    const diems = await api.get('/diem/cua-toi/' + svId);
+    allMonHoc = diems.map(d => ({
+      hocKy:       d.hocKy,
+      subjectName: d.monHocName,
+      credits:     d.credits,
+      diemTongKet: d.diemTongKet,
+    }));
+    renderMonHocByHK(allMonHoc);
+  } catch(e) {}
+}
+
+function filterMonHocByHK() {
+  const hk = document.getElementById('filterHKMonHoc').value;
+  renderMonHocByHK(hk ? allMonHoc.filter(m => m.hocKy == hk) : allMonHoc);
+}
+
+function renderMonHocByHK(list) {
+  const container = document.getElementById('monHocByHK');
+  if (!list.length) {
+    container.innerHTML = '<p style="color:#888">Chưa đăng ký môn học nào.</p>';
+    return;
+  }
+  const groups = {};
+  list.forEach(m => { if (!groups[m.hocKy]) groups[m.hocKy] = []; groups[m.hocKy].push(m); });
+  container.innerHTML = Object.keys(groups).sort((a,b)=>a-b).map(hk => `
+    <div style="margin-bottom:1rem">
+      <div style="font-weight:600;color:#1a73e8;margin-bottom:.4rem;font-size:.9rem">Học kỳ ${hk}
+        <span style="color:#888;font-weight:400;font-size:.82rem">(${groups[hk].reduce((s,m)=>s+m.credits,0)} tín chỉ)</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Tên môn</th><th>Tín chỉ</th><th>Điểm tổng kết</th></tr></thead>
+          <tbody>
+            ${groups[hk].map((m,i) => {
+              const dtkHtml = m.diemTongKet != null
+                ? (() => { const l = m.diemTongKet >= 8.5 ? 'A' : m.diemTongKet >= 7.0 ? 'B' : m.diemTongKet >= 5.5 ? 'C' : m.diemTongKet >= 4.0 ? 'D' : 'F'; return `<strong>${m.diemTongKet.toFixed(2)}</strong> <span class="badge badge-${l}">${l}</span>`; })()
+                : '<span style="color:#aaa">Chưa có điểm</span>';
+              return `<tr>
+                <td>${i+1}</td>
+                <td>${m.subjectName}</td>
+                <td>${m.credits}</td>
+                <td>${dtkHtml}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`).join('');
+}
+
+// ===== ĐĂNG KÝ MÔN HỌC =====
+let allMonHocList = [];
+
+async function initDangKy() {
+  try {
+    allMonHocList = await api.get('/monhoc');
+    const sel = document.getElementById('selectMonDangKy');
+    if (sel) {
+      sel.innerHTML = '<option value="">-- Chọn môn học --</option>' +
+        allMonHocList.map(m => `<option value="${m.id}">HK${m.hocKy} - ${m.subjectName} (${m.credits} TC)</option>`).join('');
+    }
+  } catch(e) {}
+}
+
+async function loadDangKy() {
+  await initDangKy();
+  try {
+    const list = await api.get('/dangky/cua-toi');
+    const tbody = document.querySelector('#tableDangKy tbody');
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888">Chưa có đăng ký nào</td></tr>';
+      return;
+    }
+    const trangThaiMap = {ChoDuyet:'⏳ Chờ duyệt', DaDuyet:'✅ Đã duyệt', TuChoi:'❌ Từ chối'};
+    const badgeMap    = {ChoDuyet:'badge-tb', DaDuyet:'badge-gioi', TuChoi:'badge-yeu'};
+    tbody.innerHTML = list.map(dk => `<tr>
+      <td><strong>${dk.monHocName}</strong></td>
+      <td>HK ${dk.hocKy}</td>
+      <td>${dk.credits} TC</td>
+      <td>${new Date(dk.ngayDangKy).toLocaleDateString('vi-VN')}</td>
+      <td><span class="badge ${badgeMap[dk.trangThai]||'badge-tb'}">${trangThaiMap[dk.trangThai]||dk.trangThai}</span></td>
+      <td>${dk.trangThai === 'ChoDuyet'
+        ? `<button class="btn btn-sm" style="color:#e53935;border-color:#e53935" onclick="huyDangKy(${dk.id})">Hủy</button>`
+        : '—'}</td>
+    </tr>`).join('');
+  } catch(e) {}
+}
+
+async function dangKyMon() {
+  const monHocId = parseInt(document.getElementById('selectMonDangKy').value);
+  if (!monHocId) { showToast('Vui lòng chọn môn học', true); return; }
+  try {
+    await api.post('/dangky', { monHocId });
+    showToast('Đăng ký thành công! Vui lòng chờ Admin duyệt.');
+    loadDangKy();
+  } catch(e) { showToast(e.message, true); }
+}
+
+async function huyDangKy(id) {
+  if (!confirm('Bạn có chắc muốn hủy đăng ký này?')) return;
+  try {
+    await api.delete('/dangky/' + id);
+    showToast('Đã hủy đăng ký');
+    loadDangKy();
+  } catch(e) { showToast(e.message, true); }
+}
+
+// ===== HỒ SƠ =====
+let profileData = null;
+
+async function loadProfile() {
+  try {
+    profileData = await api.get('/profile');
+    svId = profileData.id;
+    document.getElementById('svNameBadge').textContent = profileData.fullName || 'Sinh viên';
+
+    // Card 1: thông tin học tập (do Admin quản lý)
+    const pv = document.getElementById('profileView');
+    if (pv) pv.innerHTML = `
+      <div class="profile-info">
+        ${piRow('Mã sinh viên', profileData.id)}
+        ${piRow('Họ và tên', profileData.fullName)}
+        ${piRow('Email', profileData.email)}
+        ${piRow('Lớp', profileData.lopHocName || profileData.class)}
+        ${piRow('Khoa / Bộ môn', profileData.department)}
+        ${piRow('Khóa học', profileData.course)}
+      </div>`;
+
+    // Card 2: thông tin cá nhân (sinh viên tự cập nhật)
+    const pv2 = document.getElementById('personalView');
+    if (pv2) pv2.innerHTML = `
+      <div class="profile-info">
+        ${piRow('Ngày sinh', profileData.dob)}
+        ${piRow('Giới tính', profileData.gender)}
+        ${piRow('Số điện thoại', profileData.phone)}
+      </div>`;
+  } catch(e) {}
+}
+
+function piRow(label, val) {
+  return `<div class="pi-row"><div class="pi-label">${label}</div><div class="pi-val">${val || '<span style="color:#ccc">—</span>'}</div></div>`;
+}
+
+function toggleEditProfile() {
+  const ec = document.getElementById('profileEditCard');
+  const isHidden = ec.style.display === 'none';
+  ec.style.display = isHidden ? '' : 'none';
+  if (isHidden && profileData) {
+    document.getElementById('pfFullName').value = profileData.fullName || '';
+    document.getElementById('pfDob').value      = profileData.dob     || '';
+    document.getElementById('pfGender').value   = profileData.gender  || '';
+    document.getElementById('pfPhone').value    = profileData.phone   || '';
+  }
+}
+
+async function saveProfile() {
+  const body = {
+    fullName: document.getElementById('pfFullName').value.trim(),
+    dob:      document.getElementById('pfDob').value || null,
+    gender:   document.getElementById('pfGender').value || null,
+    phone:    document.getElementById('pfPhone').value.trim() || null,
+  };
+  if (!validateFields([
+    ['pfFullName', V.name(body.fullName, 'Họ tên')],
+    ['pfPhone',    V.phone(body.phone)],
+  ])) return;
+  try {
+    await api.put('/profile', body);
+    showToast('Cập nhật thành công');
+    toggleEditProfile();
+    await loadProfile();
+  } catch(e) { showToast(e.message, true); }
+}
+</script>
+</body>
+</html>

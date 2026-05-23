@@ -1,0 +1,6 @@
+@QuanlyDiemAPI_HostAddress = http://localhost:5268
+
+GET {{QuanlyDiemAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

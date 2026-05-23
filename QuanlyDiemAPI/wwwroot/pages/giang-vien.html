@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Giảng viên - Quản lý Điểm</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand"> Quản lý Điểm<br><small style="opacity:.7;font-weight:400" id="gvNameBadge">Giảng viên</small></div>
+    <nav>
+      <a href="#" class="active" onclick="showTab('diem')"> Nhập điểm</a>
+      <a href="#" onclick="showTab('monhoc')"> Môn được phân công</a>
+      <a href="#" onclick="showTab('hoso')"> Hồ sơ</a>
+      <a href="#" onclick="openDoiMK()" style="margin-top:1rem"> Đổi mật khẩu</a>
+      <a href="#" onclick="logout()" style="color:#ff8a80"> Đăng xuất</a>
+    </nav>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar"><h1 id="pageTitle">Nhập điểm</h1></div>
+    <div class="page">
+
+      <!-- NHẬP ĐIỂM: chọn môn → tự hiện sinh viên + điểm -->
+      <div id="tab-diem">
+        <div class="card">
+          <div class="card-title">Nhập và quản lý điểm</div>
+          <div class="toolbar">
+            <select id="filterMH" onchange="loadDiemTheoMon()" style="min-width:260px">
+              <option value="">-- Chọn môn để xem điểm --</option>
+            </select>
+            <button class="btn btn-success" id="btnExportDiem" style="display:none" onclick="exportCSV('tableDiem','bang-diem')">⬇ CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table id="tableDiem">
+              <thead><tr><th>Sinh viên</th><th>Lớp</th><th>CC</th><th>KT1</th><th>KT2</th><th>KT3</th><th>Thi</th><th>Tổng kết</th><th>Thao tác</th></tr></thead>
+              <tbody>
+                <tr><td colspan="9" style="text-align:center;color:#888">Chọn môn học để xem danh sách sinh viên đã đăng ký</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MÔN ĐƯỢC PHÂN CÔNG: chỉ xem, không chỉnh sửa -->
+      <div id="tab-monhoc" style="display:none">
+        <div class="card">
+          <div class="card-title">Môn học được phân công</div>
+          <div class="toolbar">
+            <input type="text" placeholder="Tìm kiếm môn..." oninput="filterTable('tableMH',this.value)">
+          </div>
+          <div class="table-wrap">
+            <table id="tableMH">
+              <thead><tr><th>#</th><th>Học kỳ</th><th>Tên môn</th><th>Tín chỉ</th><th>Khoa</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- HỒ SƠ -->
+      <div id="tab-hoso" style="display:none">
+        <div class="card">
+          <div class="card-title">👤 Thông tin cá nhân</div>
+          <div id="profileView"></div>
+          <div style="margin-top:1rem">
+            <button class="btn btn-warning" onclick="toggleEditProfile()">✏ Chỉnh sửa</button>
+          </div>
+        </div>
+        <div class="card" id="profileEditCard" style="display:none">
+          <div class="card-title">Cập nhật thông tin</div>
+          <div class="form-row">
+            <div class="form-group"><label>Họ tên</label><input id="pfFullName"></div>
+            <div class="form-group"><label>Ngày sinh</label><input id="pfDob" type="date"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Giới tính</label>
+              <select id="pfGender"><option value="">--</option><option>Nam</option><option>Nữ</option></select>
+            </div>
+            <div class="form-group"><label>Số điện thoại</label><input id="pfPhone"></div>
+          </div>
+          <div class="form-group"><label>Khoa / Bộ môn</label><input id="pfDept"></div>
+          <div style="display:flex;gap:.75rem;margin-top:.5rem">
+            <button class="btn btn-primary" onclick="saveProfile()">Lưu thay đổi</button>
+            <button class="btn" onclick="toggleEditProfile()">Hủy</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal Điểm -->
+<div class="modal-overlay" id="modalDiem">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalDiemTitle">Nhập điểm</h3>
+      <button class="modal-close" onclick="closeModal('modalDiem')">×</button>
+    </div>
+    <input type="hidden" id="diemId">
+    <div class="form-row">
+      <div class="form-group"><label>Sinh viên</label><select id="diemSV"></select></div>
+      <div class="form-group"><label>Môn học</label><select id="diemMH"></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Chuyên cần (0-10)</label><input id="diemCC" type="number" step="0.1" min="0" max="10" autocomplete="off"></div>
+      <div class="form-group"><label>KT1 (0-10)</label><input id="diemKT1" type="number" step="0.1" min="0" max="10" autocomplete="off"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>KT2 (0-10)</label><input id="diemKT2" type="number" step="0.1" min="0" max="10" autocomplete="off"></div>
+      <div class="form-group"><label>KT3 (0-10)</label><input id="diemKT3" type="number" step="0.1" min="0" max="10" autocomplete="off"></div>
+    </div>
+    <div class="form-group"><label>Thi cuối kỳ (0-10)</label><input id="diemExam" type="number" step="0.1" min="0" max="10" autocomplete="off"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalDiem')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveDiem()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="/js/api.js"></script>
+<script>
+// Tạo/huỷ modal động để tránh Chrome hiện password autofill trên form nhập điểm
+function openDoiMK() {
+  if (document.getElementById('modalDoiMK')) return;
+  const el = document.createElement('div');
+  el.id = 'modalDoiMK';
+  el.className = 'modal-overlay show';
+  el.innerHTML = `
+    <div class="modal" style="max-width:380px">
+      <div class="modal-header">
+        <h3> Đổi mật khẩu</h3>
+        <button class="modal-close" onclick="closeDoiMK()">×</button>
+      </div>
+      <div class="form-group"><label>Mật khẩu hiện tại</label><input id="mkCu" type="password" autocomplete="current-password"></div>
+      <div class="form-group"><label>Mật khẩu mới</label><input id="mkMoi" type="password" autocomplete="new-password"></div>
+      <div class="form-group"><label>Nhập lại mật khẩu mới</label><input id="mkNhapLai" type="password" autocomplete="new-password"></div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeDoiMK()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveDoiMK()">Xác nhận</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+}
+function closeDoiMK() {
+  const m = document.getElementById('modalDoiMK');
+  if (m) m.remove();
+}
+</script>
+<script>
+requireAuth();
+if (getRole() !== 'GiangVien' && getRole() !== 'Admin') window.location.href = '/index.html';
+
+let svList = [], mhList = [], profileData = null;
+let currentMonId = null, currentMonName = '';
+
+window.onload = async () => {
+  try {
+    const monhocUrl = getRole() === 'GiangVien' ? '/monhoc/cua-toi' : '/monhoc';
+    [svList, mhList] = await Promise.all([api.get('/sinhvien'), api.get(monhocUrl)]);
+    populateDropdowns();
+    loadProfile();
+  } catch(e) { showToast('Lỗi tải dữ liệu: ' + e.message, true); }
+};
+
+function showTab(tab) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('tab-' + tab).style.display = '';
+  document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  const titles = { diem: 'Nhập điểm', monhoc: 'Môn được phân công', hoso: 'Hồ sơ cá nhân' };
+  document.getElementById('pageTitle').textContent = titles[tab] || '';
+  if (tab === 'monhoc') renderMH();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function openModal(id)  { document.getElementById(id).classList.add('show'); }
+
+function filterTable(tableId, text) {
+  document.querySelectorAll(`#${tableId} tbody tr`).forEach(r =>
+    r.style.display = r.textContent.toLowerCase().includes(text.toLowerCase()) ? '' : 'none');
+}
+
+function populateDropdowns() {
+  // Dropdown chọn môn trong tab nhập điểm
+  document.getElementById('filterMH').innerHTML =
+    '<option value="">-- Chọn môn để xem điểm --</option>' +
+    mhList.map(m => `<option value="${m.id}">HK${m.hocKy} - ${m.subjectName} (${m.credits} TC)</option>`).join('');
+
+  // Dropdown trong modal nhập điểm
+  document.getElementById('diemSV').innerHTML =
+    '<option value="">-- Chọn sinh viên --</option>' +
+    svList.map(s => `<option value="${s.id}">${s.fullName}</option>`).join('');
+  document.getElementById('diemMH').innerHTML =
+    mhList.map(m => `<option value="${m.id}">HK${m.hocKy} - ${m.subjectName} (${m.credits} TC)</option>`).join('');
+}
+
+// ===== NHẬP ĐIỂM: chọn môn → load sinh viên đã duyệt đăng ký =====
+async function loadDiemTheoMon() {
+  const mhId = parseInt(document.getElementById('filterMH').value);
+  const btnExport = document.getElementById('btnExportDiem');
+
+  if (!mhId) {
+    currentMonId = null; currentMonName = '';
+    btnExport.style.display = 'none';
+    document.querySelector('#tableDiem tbody').innerHTML =
+      '<tr><td colspan="9" style="text-align:center;color:#888">Chọn môn học để xem danh sách sinh viên đã đăng ký</td></tr>';
+    return;
+  }
+
+  const mon = mhList.find(m => m.id === mhId);
+  currentMonId   = mhId;
+  currentMonName = mon?.subjectName || '';
+  btnExport.style.display = '';
+
+  try {
+    const list = await api.get(`/monhoc/${mhId}/sinh-vien`);
+    const tbody = document.querySelector('#tableDiem tbody');
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#888">Chưa có sinh viên nào đăng ký và được duyệt cho môn này.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(d => {
+      const fmt = v => v != null ? v : '—';
+      const dtk = d.diemTongKet;
+      const loai = dtk != null ? (dtk >= 8.5 ? 'A' : dtk >= 7.0 ? 'B' : dtk >= 5.5 ? 'C' : dtk >= 4.0 ? 'D' : 'F') : null;
+      const dtkHtml = dtk != null
+        ? `<strong>${dtk.toFixed(2)}</strong> <span class="badge badge-${loai}">${loai}</span>`
+        : '<span style="color:#aaa">Chưa đủ điểm</span>';
+      return `<tr>
+        <td>${d.tenSV}</td>
+        <td>${d.lop}</td>
+        <td>${fmt(d.cc)}</td>
+        <td>${fmt(d.kT1)}</td>
+        <td>${fmt(d.kT2)}</td>
+        <td>${fmt(d.kT3)}</td>
+        <td>${fmt(d.exam)}</td>
+        <td>${dtkHtml}</td>
+        <td><button class="btn btn-warning btn-sm" onclick="editDiem(${d.diemId},${d.sinhVienId},${mhId},${JSON.stringify(d.cc)},${JSON.stringify(d.kT1)},${JSON.stringify(d.kT2)},${JSON.stringify(d.kT3)},${JSON.stringify(d.exam)})">Nhập điểm</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { showToast('Lỗi tải điểm: ' + e.message, true); }
+}
+
+function editDiem(id, svId, mhId, cc, kt1, kt2, kt3, exam) {
+  document.getElementById('diemId').value    = id;
+  document.getElementById('modalDiemTitle').textContent = 'Nhập / Cập nhật điểm';
+  document.getElementById('diemSV').value    = svId;
+  document.getElementById('diemMH').value    = mhId;
+  document.getElementById('diemCC').value    = cc != null ? cc : '';
+  document.getElementById('diemKT1').value   = kt1 != null ? kt1 : '';
+  document.getElementById('diemKT2').value   = kt2 != null ? kt2 : '';
+  document.getElementById('diemKT3').value   = kt3 != null ? kt3 : '';
+  document.getElementById('diemExam').value  = exam != null ? exam : '';
+  openModal('modalDiem');
+}
+
+async function saveDiem() {
+  const id   = document.getElementById('diemId').value;
+  const svId = document.getElementById('diemSV').value;
+  const mhId = document.getElementById('diemMH').value;
+  const cc   = document.getElementById('diemCC').value;
+  const kt1  = document.getElementById('diemKT1').value;
+  const kt2  = document.getElementById('diemKT2').value;
+  const kt3  = document.getElementById('diemKT3').value;
+  const exam = document.getElementById('diemExam').value;
+
+  // Chỉ validate nếu có giá trị (cho phép để trống)
+  const scoreCheck = (val, label) => {
+    if (val === '' || val == null) return null;
+    const n = parseFloat(val);
+    if (isNaN(n) || n < 0 || n > 10) return `${label} phải từ 0 đến 10`;
+    return null;
+  };
+  const errs = [scoreCheck(cc,'CC'), scoreCheck(kt1,'KT1'), scoreCheck(kt2,'KT2'), scoreCheck(kt3,'KT3'), scoreCheck(exam,'Thi')].filter(Boolean);
+  if (errs.length) { showToast(errs[0], true); return; }
+
+  const toScore = v => (v === '' || v == null) ? null : parseFloat(v);
+  const body = {
+    sinhVienId: parseInt(svId),
+    monHocId:   parseInt(mhId),
+    cc:   toScore(cc),
+    kT1:  toScore(kt1),
+    kT2:  toScore(kt2),
+    kT3:  toScore(kt3),
+    exam: toScore(exam),
+  };
+  try {
+    if (id) await api.put('/diem/' + id, body);
+    else    await api.post('/diem', body);
+    showToast('Lưu điểm thành công');
+    closeModal('modalDiem');
+    if (currentMonId) loadDiemTheoMon();
+  } catch(e) { showToast(e.message, true); }
+}
+
+// ===== MÔN ĐƯỢC PHÂN CÔNG: chỉ xem =====
+function renderMH() {
+  const tbody = document.querySelector('#tableMH tbody');
+  if (!mhList.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888">Chưa được phân công môn học nào</td></tr>';
+    return;
+  }
+  tbody.innerHTML = mhList.map((m, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><span class="badge badge-tb" style="font-size:.78rem">HK ${m.hocKy}</span></td>
+      <td><strong>${m.subjectName}</strong></td>
+      <td>${m.credits} TC</td>
+      <td>${m.department || '—'}</td>
+    </tr>`).join('');
+}
+
+// ===== HỒ SƠ =====
+function piRow(label, val) {
+  return `<div class="pi-row"><div class="pi-label">${label}</div><div class="pi-val">${val || '<span style="color:#ccc">—</span>'}</div></div>`;
+}
+
+async function loadProfile() {
+  try {
+    profileData = await api.get('/profile');
+    document.getElementById('gvNameBadge').textContent = profileData.fullName || 'Giảng viên';
+    const pv = document.getElementById('profileView');
+    if (pv) pv.innerHTML = `
+      <div class="profile-info">
+        ${piRow('Họ tên', profileData.fullName)}
+        ${piRow('Email', profileData.email)}
+        ${piRow('Ngày sinh', profileData.dob)}
+        ${piRow('Giới tính', profileData.gender)}
+        ${piRow('Số điện thoại', profileData.phone)}
+        ${piRow('Khoa / Bộ môn', profileData.department)}
+      </div>`;
+  } catch(e) {}
+}
+
+function toggleEditProfile() {
+  const ec = document.getElementById('profileEditCard');
+  ec.style.display = ec.style.display === 'none' ? '' : 'none';
+  if (ec.style.display !== 'none' && profileData) {
+    document.getElementById('pfFullName').value = profileData.fullName || '';
+    document.getElementById('pfDob').value      = profileData.dob || '';
+    document.getElementById('pfGender').value   = profileData.gender || '';
+    document.getElementById('pfPhone').value    = profileData.phone || '';
+    document.getElementById('pfDept').value     = profileData.department || '';
+  }
+}
+
+async function saveProfile() {
+  const body = {
+    fullName:   document.getElementById('pfFullName').value.trim(),
+    dob:        document.getElementById('pfDob').value || null,
+    gender:     document.getElementById('pfGender').value || null,
+    phone:      document.getElementById('pfPhone').value.trim() || null,
+    department: document.getElementById('pfDept').value.trim() || null,
+  };
+  if (!validateFields([
+    ['pfFullName', V.name(body.fullName, 'Họ tên')],
+    ['pfPhone',    V.phone(body.phone)],
+    ['pfDept',     V.text(body.department, 'Khoa / Bộ môn')],
+  ])) return;
+  try {
+    await api.put('/profile', body);
+    showToast('Cập nhật thành công');
+    toggleEditProfile();
+    await loadProfile();
+  } catch(e) { showToast(e.message, true); }
+}
+</script>
+</body>
+</html>

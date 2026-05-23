@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đăng nhập - Quản lý Điểm</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="auth-container">
+  <div class="auth-card">
+    <h2>🎓 Quản lý Điểm</h2>
+    <p style="text-align:center;color:#777;font-size:0.88rem;margin-bottom:1.2rem">
+      Tài khoản được cấp bởi quản trị viên
+    </p>
+    <div id="alert" class="alert alert-error" style="display:none"></div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="example@email.com"
+             autocomplete="off"
+             onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <div class="form-group">
+      <label>Mật khẩu</label>
+      <input type="password" id="loginPass" placeholder="Nhập mật khẩu"
+             autocomplete="new-password"
+             onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn btn-primary btn-block" onclick="doLogin()">Đăng nhập</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script src="/js/api.js"></script>
+<script>
+  if (getToken()) redirectByRole(getRole());
+
+  // Xóa sạch ô input mỗi khi trang login được mở
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPass').value  = '';
+  });
+
+  async function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPass').value;
+    if (!email) return showAlert('Vui lòng nhập email');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert('Email không hợp lệ');
+    if (!pass)  return showAlert('Vui lòng nhập mật khẩu');
+    try {
+      const res = await api.post('/auth/login', { email, matKhau: pass });
+      sessionStorage.setItem('token',     res.token);
+      sessionStorage.setItem('role',      res.role);
+      sessionStorage.setItem('userId',    res.userId);
+      sessionStorage.setItem('profileId', res.profileId ?? '');
+      redirectByRole(res.role);
+    } catch(e) { showAlert(e.message); }
+  }
+
+  function redirectByRole(role) {
+    if (role === 'Admin')          window.location.href = '/pages/admin.html';
+    else if (role === 'GiangVien') window.location.href = '/pages/giang-vien.html';
+    else                           window.location.href = '/pages/sinh-vien.html';
+  }
+
+  function showAlert(msg, isError = true) {
+    const a = document.getElementById('alert');
+    a.textContent = msg;
+    a.className = 'alert ' + (isError ? 'alert-error' : 'alert-success');
+    a.style.display = 'block';
+  }
+</script>
+</body>
+</html>

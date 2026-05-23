@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - Quản lý Điểm</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand"> Quản lý Điểm<br><small style="opacity:.7;font-weight:400">Admin</small></div>
+    <nav>
+      <a href="#" class="active" onclick="showTab('dashboard')">Dashboard</a>
+      <a href="#" onclick="showTab('lophoc')"> Lớp học</a>
+      <a href="#" onclick="showTab('monhoc')"> Môn học</a>
+      <a href="#" onclick="showTab('diem')"> Điểm số</a>
+      <a href="#" onclick="showTab('dangky')"> Duyệt đăng ký</a>
+      <a href="#" onclick="showTab('ai')"> Đánh giá AI</a>
+      <a href="#" onclick="showTab('taikhoan')"> Tài khoản</a>
+      <a href="#" onclick="showTab('nhatky')"> Nhật ký</a>
+      <a href="#" onclick="logout()" style="color:#ff8a80"> Đăng xuất</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-content">
+    <div class="topbar">
+      <h1 id="pageTitle">Dashboard</h1>
+    </div>
+    <div class="page">
+
+      <!-- DASHBOARD -->
+      <div id="tab-dashboard">
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4> Phân bố học lực</h4>
+            <canvas id="chartRank"></canvas>
+            <p id="chartNoData" style="text-align:center;color:#bbb;display:none">Chưa có dữ liệu đánh giá AI</p>
+          </div>
+          <div class="chart-card">
+            <h4> Sinh viên cần chú ý (GPA &lt; 5)</h4>
+            <div id="canhBaoList"><p style="color:#bbb;font-size:.9rem">Đang tải...</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LỚP HỌC -->
+      <div id="tab-lophoc" style="display:none">
+        <div class="card">
+          <div class="card-title">Danh sách lớp học</div>
+          <div class="toolbar">
+            <input type="text" placeholder="Tìm kiếm..." oninput="filterTable('tableLH', this.value)">
+            <button class="btn btn-primary" onclick="openModalLH()">+ Thêm</button>
+          </div>
+          <div class="table-wrap">
+            <table id="tableLH">
+              <thead><tr><th>#</th><th>Tên lớp</th><th>Khoa</th><th>Phòng</th><th>Số SV</th><th>Cố vấn</th><th>Thao tác</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MÔN HỌC -->
+      <div id="tab-monhoc" style="display:none">
+        <div class="card">
+          <div class="card-title">Danh sách môn học</div>
+          <div class="toolbar">
+            <input type="text" placeholder="Tìm kiếm..." oninput="filterTable('tableMH', this.value)">
+            <button class="btn btn-primary" onclick="openModalMH()">+ Thêm</button>
+          </div>
+          <div class="toolbar" style="margin-bottom:.5rem">
+            <label style="font-size:.85rem;color:#666">Lọc học kỳ:</label>
+            <select id="filterHocKyMH" onchange="filterMHByHocKy()">
+              <option value="">-- Tất cả --</option>
+              <option value="1">Học kỳ 1</option><option value="2">Học kỳ 2</option>
+              <option value="3">Học kỳ 3</option><option value="4">Học kỳ 4</option>
+              <option value="5">Học kỳ 5</option><option value="6">Học kỳ 6</option>
+              <option value="7">Học kỳ 7</option><option value="8">Học kỳ 8</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table id="tableMH">
+              <thead><tr><th>#</th><th>Học kỳ</th><th>Tên môn</th><th>Tín chỉ</th><th>Khoa</th><th>Giảng viên</th><th>Thao tác</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ĐIỂM -->
+      <div id="tab-diem" style="display:none">
+        <div class="card">
+          <div class="card-title">Tra cứu điểm</div>
+          <div class="toolbar">
+            <select id="filterSV" onchange="loadDiem()"><option value="">-- Chọn sinh viên --</option></select>
+            <select id="filterMH" onchange="loadDiem()"><option value="">-- Tất cả môn --</option></select>
+          </div>
+          <div class="table-wrap">
+            <table id="tableDiem">
+              <thead><tr><th>Sinh viên</th><th>Môn học</th><th>TC</th><th>CC</th><th>KT1</th><th>KT2</th><th>KT3</th><th>Thi</th><th>Tổng kết</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- DUYỆT ĐĂNG KÝ MÔN HỌC -->
+      <div id="tab-dangky" style="display:none">
+        <div class="card">
+          <div class="card-title">Duyệt đăng ký môn học</div>
+          <div class="toolbar">
+            <select id="filterTrangThaiDK" onchange="loadDangKyAdmin()">
+              <option value="">-- Tất cả trạng thái --</option>
+              <option value="ChoDuyet" selected>Chờ duyệt</option>
+              <option value="DaDuyet">Đã duyệt</option>
+              <option value="TuChoi">Từ chối</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table id="tableDangKyAdmin">
+              <thead><tr><th>#</th><th>Sinh viên</th><th>Môn học</th><th>Học kỳ</th><th>Tín chỉ</th><th>Ngày đăng ký</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+              <tbody><tr><td colspan="8" style="text-align:center;color:#888">Đang tải...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TÀI KHOẢN -->
+      <div id="tab-taikhoan" style="display:none">
+        <div class="card">
+          <div class="card-title">🔑 Quản lý tài khoản</div>
+          <div class="toolbar">
+            <input type="text" placeholder="Tìm kiếm email, tên..." oninput="filterTable('tableTK', this.value)">
+            <select id="filterRole" onchange="filterByRole()">
+              <option value="">-- Tất cả vai trò --</option>
+              <option value="Admin">Admin</option>
+              <option value="GiangVien">Giảng viên</option>
+              <option value="SinhVien">Sinh viên</option>
+            </select>
+            <button class="btn btn-primary" onclick="openModalTK()">+ Tạo tài khoản</button>
+          </div>
+          <div class="table-wrap">
+            <table id="tableTK">
+              <thead>
+                <tr>
+                  <th>#</th><th>Email</th><th>Vai trò</th><th>Họ tên</th>
+                  <th>Lớp / Khoa</th><th>SĐT</th><th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI -->
+      <div id="tab-ai" style="display:none">
+
+        <!-- Stats nhanh -->
+        <div class="stats-grid" id="aiStatsGrid" style="margin-bottom:1.2rem"></div>
+
+        <!-- Đánh giá hàng loạt -->
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Đánh giá hàng loạt</div>
+          <p style="font-size:.86rem;color:#666;margin-bottom:.75rem">Hệ thống sẽ tự động tính GPA và sinh nhận xét AI cho <strong>tất cả sinh viên</strong> đã có đủ điểm.</p>
+          <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-primary" id="btnTatCa" onclick="danhGiaAITatCa()">Đánh giá tất cả</button>
+            <span id="aiProgressText" style="font-size:.85rem;color:#666"></span>
+          </div>
+          <div id="aiProgressBar" style="display:none;margin-top:.75rem">
+            <div style="background:#e8e0f7;border-radius:99px;height:10px;overflow:hidden">
+              <div id="aiProgressFill" style="background:var(--primary);height:10px;border-radius:99px;width:0%;transition:width .4s ease"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Đánh giá một sinh viên -->
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Đánh giá sinh viên cụ thể</div>
+          <div class="toolbar">
+            <select id="selectSVAI" style="flex:1"><option value="">-- Chọn sinh viên --</option></select>
+            <button class="btn btn-primary" onclick="danhGiaAI()">Đánh giá</button>
+          </div>
+          <div id="aiResult"></div>
+        </div>
+
+        <!-- Bảng kết quả tất cả -->
+        <div class="card">
+          <div class="card-title">Kết quả đánh giá AI</div>
+          <div class="toolbar">
+            <input type="text" id="searchAI" placeholder="Tìm tên sinh viên..." oninput="filterAITable()">
+            <select id="filterRankAI" onchange="filterAITable()">
+              <option value="">-- Tất cả xếp loại --</option>
+              <option value="Giỏi">Giỏi</option>
+              <option value="Khá">Khá</option>
+              <option value="Trung bình">Trung bình</option>
+              <option value="Yếu">Yếu</option>
+            </select>
+            <button class="btn" onclick="loadAIResults()">Làm mới</button>
+          </div>
+          <div class="table-wrap">
+            <table id="tableAI">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Sinh viên</th>
+                  <th style="text-align:center">GPA</th>
+                  <th style="text-align:center">Xếp loại</th>
+                  <th>Nhận xét AI</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="6" style="text-align:center;color:#888">Chưa có dữ liệu đánh giá. Nhấn "Đánh giá tất cả" để bắt đầu.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- NHẬT KÝ HỆ THỐNG -->
+      <div id="tab-nhatky" style="display:none">
+        <div class="card">
+          <div class="card-title"> Nhật ký hệ thống</div>
+          <div class="toolbar">
+            <button class="btn" onclick="loadAuditLog()">Làm mới</button>
+            <span id="auditTotal" style="font-size:.85rem;color:#666;margin-left:.5rem"></span>
+          </div>
+          <div class="table-wrap">
+            <table id="tableAudit">
+              <thead>
+                <tr>
+                  <th>#</th><th>Thời gian</th><th>Email</th><th>Vai trò</th>
+                  <th>Hành động</th><th>Chi tiết</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="6" style="text-align:center;color:#888">Đang tải...</td></tr></tbody>
+            </table>
+          </div>
+          <div id="auditPager" style="margin-top:.8rem;display:flex;gap:.4rem;justify-content:flex-end"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal Danh sách SV trong lớp -->
+<div class="modal-overlay" id="modalSVInLop">
+  <div class="modal" style="max-width:760px">
+    <div class="modal-header">
+      <h3 id="modalSVInLopTitle">Danh sách sinh viên</h3>
+      <button class="modal-close" onclick="closeModal('modalSVInLop')">×</button>
+    </div>
+    <div id="modalSVInLopBody">
+      <p style="color:#888">Đang tải...</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalSVInLop')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Lớp học -->
+<div class="modal-overlay" id="modalLH">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Thêm lớp học</h3>
+      <button class="modal-close" onclick="closeModal('modalLH')">×</button>
+    </div>
+    <input type="hidden" id="lhId">
+    <div class="form-row">
+      <div class="form-group"><label>Tên lớp *</label><input id="lhName"></div>
+      <div class="form-group"><label>Khoa</label><input id="lhDept"></div>
+    </div>
+    <div class="form-group"><label>Phòng học</label><input id="lhRoom"></div>
+    <div class="form-group"><label>Cố vấn học tập</label>
+      <select id="lhAdvisor"><option value="">-- Chọn giảng viên --</option></select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalLH')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveLH()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Môn học -->
+<div class="modal-overlay" id="modalMH">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalMHTitle">Thêm môn học</h3>
+      <button class="modal-close" onclick="closeModal('modalMH')">×</button>
+    </div>
+    <input type="hidden" id="mhId">
+    <div class="form-row">
+      <div class="form-group"><label>Tên môn *</label><input id="mhName"></div>
+      <div class="form-group"><label>Tín chỉ *</label><input id="mhCredits" type="number" min="1" max="10" value="3"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Học kỳ *</label>
+        <select id="mhHocKy">
+          <option value="1">Học kỳ 1</option><option value="2">Học kỳ 2</option>
+          <option value="3">Học kỳ 3</option><option value="4">Học kỳ 4</option>
+          <option value="5">Học kỳ 5</option><option value="6">Học kỳ 6</option>
+          <option value="7">Học kỳ 7</option><option value="8">Học kỳ 8</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Khoa</label><input id="mhDept"></div>
+    </div>
+    <div class="form-group"><label>Giảng viên phụ trách</label>
+      <select id="mhGV"><option value="">-- Không phân công --</option></select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalMH')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveMH()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tạo/Sửa Tài khoản -->
+<div class="modal-overlay" id="modalTK">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTKTitle">Tạo tài khoản</h3>
+      <button class="modal-close" onclick="closeModal('modalTK')">×</button>
+    </div>
+    <input type="hidden" id="tkId">
+    <div class="form-row">
+      <div class="form-group"><label>Email *</label><input id="tkEmail" type="email" placeholder="name@email.com"></div>
+      <div class="form-group">
+        <label>Mật khẩu <span id="tkPassHint" style="color:#999;font-weight:400">(để trống = không đổi)</span></label>
+        <input id="tkPass" type="text" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
+      </div>
+    </div>
+    <div class="form-group"><label>Vai trò *</label>
+      <select id="tkRole" onchange="toggleProfileFields()">
+        <option value="SinhVien">Sinh viên</option>
+        <option value="GiangVien">Giảng viên</option>
+        <option value="Admin">Admin</option>
+      </select>
+    </div>
+    <!-- Profile fields -->
+    <div id="profileFields">
+      <hr style="margin:.8rem 0;border-color:#eee">
+      <div style="font-size:.85rem;color:#888;margin-bottom:.7rem">Thông tin cá nhân</div>
+      <div class="form-row">
+        <div class="form-group"><label>Họ tên *</label><input id="tkFullName" placeholder="Nguyễn Văn A"></div>
+        <div class="form-group"><label>Ngày sinh</label><input id="tkDob" type="date"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Giới tính</label>
+          <select id="tkGender"><option value="">--</option><option>Nam</option><option>Nữ</option></select>
+        </div>
+        <div class="form-group"><label>SĐT</label><input id="tkPhone" placeholder="0912345678"></div>
+      </div>
+      <div class="form-group"><label>Khoa / Bộ môn</label><input id="tkDept" placeholder="Công nghệ thông tin"></div>
+      <!-- Chỉ SinhVien mới có Lớp và Khóa -->
+      <div id="svOnlyFields">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Lớp</label>
+            <select id="tkClass">
+              <option value="">-- Chọn lớp --</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Khóa</label><input id="tkCourse" placeholder="K2022"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalTK')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveTK()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Xem chi tiết tài khoản -->
+<div class="modal-overlay" id="modalTKDetail">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Chi tiết tài khoản</h3>
+      <button class="modal-close" onclick="closeModal('modalTKDetail')">×</button>
+    </div>
+    <div id="tkDetailContent"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalTKDetail')">Đóng</button>
+      <button class="btn btn-warning" id="btnEditFromDetail" onclick="">Chỉnh sửa</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="/js/api.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>
