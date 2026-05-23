@@ -27,7 +27,7 @@ function showTab(tab) {
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
   document.getElementById('tab-' + tab).style.display = '';
   document.querySelectorAll('.sidebar nav a').forEach((a, i) => a.classList.remove('active'));
-  const titles = {dashboard:'Dashboard',lophoc:'Lớp học',monhoc:'Môn học',
+  const titles = {dashboard:'Trang chủ',lophoc:'Lớp học',monhoc:'Môn học',
     diem:'Điểm số',dangky:'Duyệt đăng ký môn học',ai:'Đánh giá AI',
     taikhoan:'Quản lý tài khoản',nhatky:'Nhật ký hệ thống'};
   document.getElementById('pageTitle').textContent = titles[tab] || '';
