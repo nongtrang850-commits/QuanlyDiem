@@ -45,6 +45,7 @@ public class AiService(IConfiguration config, IHttpClientFactory httpFactory)
             1. Đánh giá tổng quan kết quả hiện tại (1 câu)
             2. Nhận xét điểm mạnh hoặc vấn đề cụ thể cần chú ý (1 câu)
             3. Lời khuyên thiết thực và động viên (1-2 câu)
+            QUAN TRỌNG: Chỉ dùng tiếng Việt thuần túy, tuyệt đối không dùng ký tự Hán/Trung Quốc hay bất kỳ ngôn ngữ nào khác.
             Chỉ trả lời phần nhận xét, không thêm tiêu đề hay giải thích.
             """;
 
