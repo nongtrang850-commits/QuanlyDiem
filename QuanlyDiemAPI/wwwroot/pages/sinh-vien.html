@@ -319,7 +319,7 @@ async function loadAI() {
           <span class="badge badge-${({Giỏi:'gioi',Khá:'kha','Trung bình':'tb',Yếu:'yeu'}[d.rank]||'tb')}" style="font-size:1rem;padding:.4rem 1.1rem">${d.rank}</span>
         </div>
       </div>
-      <div style="background:#f8f4ff;border-left:4px solid ${color};border-radius:0 8px 8px 0;padding:.8rem 1.1rem;font-size:.92rem;line-height:1.7;color:#333">
+      <div class="ai-comment-box" style="background:#f8f4ff;border-left:4px solid ${color};border-radius:0 8px 8px 0;padding:.8rem 1.1rem;font-size:.92rem;line-height:1.7;color:#333">
         <span style="font-weight:700;color:var(--primary)">Nhận xét AI: </span>${d.aiComment || 'Chưa có nhận xét.'}
       </div>
       ${warnHtml}`;
