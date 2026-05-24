@@ -526,17 +526,9 @@ tbody td { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); }
   }
   .gpa-big { font-size: 2.8rem !important; }
 
-  /* Ẩn cột nhận xét AI trong bảng trên mobile */
-  .col-ai-comment { display: none; }
-
-  /* Hiện nhận xét AI dưới tên sinh viên trong bảng */
-  .mobile-ai-comment {
-    display: block;
-    font-size: 0.78rem;
-    color: #666;
-    margin-top: 0.3rem;
-    font-style: italic;
-    line-height: 1.5;
-    white-space: normal;
-  }
+  /* Bảng cuộn ngang trên mobile */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #tableAI { min-width: 700px; }
+  #tableAI .col-ai-comment { min-width: 220px; white-space: normal; }
+  .mobile-ai-comment { display: none; }
 }
