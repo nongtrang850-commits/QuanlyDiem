@@ -19,8 +19,15 @@
     </nav>
   </aside>
 
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
   <div class="main-content">
-    <div class="topbar"><h1 id="pageTitle">Nhập điểm</h1></div>
+    <div class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <span></span><span></span><span></span>
+      </button>
+      <h1 id="pageTitle">Nhập điểm</h1>
+    </div>
     <div class="page">
 
       <!-- NHẬP ĐIỂM: chọn môn → tự hiện sinh viên + điểm -->

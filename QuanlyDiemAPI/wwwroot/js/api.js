@@ -1,5 +1,17 @@
 const API = '/api';
 
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.querySelector('.sidebar-overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.querySelector('.sidebar-overlay').classList.remove('show');
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('.sidebar nav a')) closeSidebar();
+});
+
 function getToken()    { return sessionStorage.getItem('token'); }
 function getRole()     { return sessionStorage.getItem('role'); }
 function getUserId()   { return sessionStorage.getItem('userId'); }
