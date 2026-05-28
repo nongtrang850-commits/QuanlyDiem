@@ -83,14 +83,12 @@ using (var scope = app.Services.CreateScope())
         {
             Email = "admin@gmail.com",
             MatKhau = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-            MatKhauGoc = "Admin@123",
             Role = "Admin"
         };
         var gvAcc = new QuanlyDiemAPI.Models.NguoiDung
         {
             Email = "giaovien@gmail.com",
             MatKhau = BCrypt.Net.BCrypt.HashPassword("Gv@123456"),
-            MatKhauGoc = "Gv@123456",
             Role = "GiangVien",
             GiangVien = new QuanlyDiemAPI.Models.GiangVien
             {
@@ -103,7 +101,6 @@ using (var scope = app.Services.CreateScope())
         {
             Email = "sinhvien@gmail.com",
             MatKhau = BCrypt.Net.BCrypt.HashPassword("Sv@123456"),
-            MatKhauGoc = "Sv@123456",
             Role = "SinhVien",
             SinhVien = new QuanlyDiemAPI.Models.SinhVien
             {
@@ -204,8 +201,7 @@ using (var scope = app.Services.CreateScope())
             {
                 Email     = email,
                 MatKhau   = BCrypt.Net.BCrypt.HashPassword("Sv@123456"),
-                MatKhauGoc = "Sv@123456",
-                Role      = "SinhVien",
+                    Role      = "SinhVien",
                 SinhVien  = new QuanlyDiemAPI.Models.SinhVien
                 {
                     FullName   = name,

@@ -68,8 +68,7 @@ public class AuthController(AppDbContext db, JwtService jwt, AuditService audit)
         if (req.MatKhauMoi.Length < 6)
             return BadRequest(new { message = "Mật khẩu mới tối thiểu 6 ký tự" });
 
-        user.MatKhau    = BCrypt.Net.BCrypt.HashPassword(req.MatKhauMoi);
-        user.MatKhauGoc = req.MatKhauMoi;
+        user.MatKhau = BCrypt.Net.BCrypt.HashPassword(req.MatKhauMoi);
         await db.SaveChangesAsync();
         return Ok(new { message = "Đổi mật khẩu thành công" });
     }

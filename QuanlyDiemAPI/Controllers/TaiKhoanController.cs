@@ -36,7 +36,7 @@ public class TaiKhoanController(AppDbContext db) : ControllerBase
         }
 
         return new TaiKhoanResponse(acc.Id, acc.Email, acc.Role,
-            fullName, dob, gender, phone, dept, cls, course, lopHocId, acc.MatKhauGoc);
+            fullName, dob, gender, phone, dept, cls, course, lopHocId);
     }
 
     [HttpGet]
@@ -70,7 +70,6 @@ public class TaiKhoanController(AppDbContext db) : ControllerBase
         {
             Email    = req.Email,
             MatKhau  = BCrypt.Net.BCrypt.HashPassword(req.MatKhau),
-            MatKhauGoc = req.MatKhau,
             Role     = req.Role
         };
 
@@ -126,8 +125,7 @@ public class TaiKhoanController(AppDbContext db) : ControllerBase
         acc.Role = req.Role;
         if (!string.IsNullOrEmpty(req.MatKhau))
         {
-            acc.MatKhau    = BCrypt.Net.BCrypt.HashPassword(req.MatKhau);
-            acc.MatKhauGoc = req.MatKhau;
+            acc.MatKhau = BCrypt.Net.BCrypt.HashPassword(req.MatKhau);
         }
 
         if (req.Role == "SinhVien")

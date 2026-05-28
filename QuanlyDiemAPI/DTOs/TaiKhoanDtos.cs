@@ -39,6 +39,5 @@ public record TaiKhoanResponse(
     string? Department,
     string? Class,
     string? Course,
-    int? LopHocId = null,
-    string? MatKhauGoc = null
+    int? LopHocId = null
 );
