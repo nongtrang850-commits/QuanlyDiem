@@ -737,7 +737,7 @@ function editTK(id) {
   if (!tk) return;
   document.getElementById('tkId').value = tk.id;
   document.getElementById('tkEmail').value = tk.email;
-  document.getElementById('tkPass').value = tk.matKhauGoc || '';
+  document.getElementById('tkPass').value = '';
   document.getElementById('tkRole').value = tk.role;
   document.getElementById('tkFullName').value = tk.fullName || '';
   document.getElementById('tkDob').value = tk.dob || '';
