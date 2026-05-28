@@ -602,10 +602,7 @@ function renderAITable(list) {
   tbody.innerHTML = list.map((r, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td>
-        <strong>${r.studentName}</strong>
-        <span class="mobile-ai-comment">${r.aiComment || ''}</span>
-      </td>
+      <td><strong>${r.studentName}</strong></td>
       <td style="text-align:center;font-weight:700;color:${rankColor[r.rank]||'#333'}">${r.gpa.toFixed(2)}</td>
       <td style="text-align:center">${rankBadge(r.rank)}</td>
       <td class="col-ai-comment" style="font-size:.83rem;color:#555;max-width:360px">${r.aiComment || '<span style="color:#ccc">—</span>'}</td>
