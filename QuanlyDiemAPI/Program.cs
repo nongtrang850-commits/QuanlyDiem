@@ -65,10 +65,10 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
 
-    // Xóa cột MatKhauGoc cũ nếu còn tồn tại trong DB (đã bị xóa khỏi model)
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE NguoiDungs DROP COLUMN IF EXISTS MatKhauGoc"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE GiangViens  DROP COLUMN IF EXISTS MatKhauGoc"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE SinhViens   DROP COLUMN IF EXISTS MatKhauGoc"); } catch { }
+    // Xóa cột MatKhauGoc cũ nếu còn tồn tại (tương thích MySQL 5.7+)
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE NguoiDungs DROP COLUMN MatKhauGoc"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE GiangViens  DROP COLUMN MatKhauGoc"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE SinhViens   DROP COLUMN MatKhauGoc"); } catch { }
 
     // Tạo bảng AuditLogs nếu chưa tồn tại (DB cũ không có bảng này)
     db.Database.ExecuteSqlRaw(@"
