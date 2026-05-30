@@ -73,6 +73,9 @@ public class TaiKhoanController(AppDbContext db) : ControllerBase
             Role     = req.Role
         };
 
+        DateOnly? ParseDob(string? dob) =>
+            !string.IsNullOrEmpty(dob) && DateOnly.TryParse(dob, out var d) ? d : null;
+
         if (req.Role == "SinhVien")
         {
             string? className = req.Class;
@@ -83,9 +86,9 @@ public class TaiKhoanController(AppDbContext db) : ControllerBase
             }
             acc.SinhVien = new SinhVien
             {
-                FullName   = req.FullName,
+                FullName   = req.FullName ?? "",
                 Email      = req.Email,
-                Dob        = req.Dob is not null ? DateOnly.Parse(req.Dob) : null,
+                Dob        = ParseDob(req.Dob),
                 Gender     = req.Gender,
                 Phone      = req.Phone,
                 Department = req.Department,
@@ -98,17 +101,28 @@ public class TaiKhoanController(AppDbContext db) : ControllerBase
         {
             acc.GiangVien = new GiangVien
             {
-                FullName = req.FullName,
-                Email = req.Email,
-                Dob = req.Dob is not null ? DateOnly.Parse(req.Dob) : null,
-                Gender = req.Gender,
-                Phone = req.Phone,
+                FullName   = req.FullName ?? "",
+                Email      = req.Email,
+                Dob        = ParseDob(req.Dob),
+                Gender     = req.Gender,
+                Phone      = req.Phone,
                 Department = req.Department
             };
         }
 
-        db.NguoiDungs.Add(acc);
-        await db.SaveChangesAsync();
+        try
+        {
+            db.NguoiDungs.Add(acc);
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            var inner = ex.InnerException?.Message ?? ex.Message;
+            if (inner.Contains("Duplicate", StringComparison.OrdinalIgnoreCase) ||
+                inner.Contains("UNIQUE",    StringComparison.OrdinalIgnoreCase))
+                return BadRequest(new { message = "Email hoặc dữ liệu đã tồn tại trong hệ thống" });
+            return BadRequest(new { message = "Lỗi lưu dữ liệu: " + inner });
+        }
         return Ok(new { message = "Tạo tài khoản thành công", id = acc.Id });
     }
 
@@ -128,6 +142,9 @@ public class TaiKhoanController(AppDbContext db) : ControllerBase
             acc.MatKhau = BCrypt.Net.BCrypt.HashPassword(req.MatKhau);
         }
 
+        DateOnly? ParseDob2(string? dob) =>
+            !string.IsNullOrEmpty(dob) && DateOnly.TryParse(dob, out var d) ? d : null;
+
         if (req.Role == "SinhVien")
         {
             string? className = req.Class;
@@ -138,8 +155,8 @@ public class TaiKhoanController(AppDbContext db) : ControllerBase
             }
             if (acc.SinhVien is not null)
             {
-                acc.SinhVien.Email = req.Email; acc.SinhVien.FullName = req.FullName;
-                acc.SinhVien.Dob = req.Dob is not null ? DateOnly.Parse(req.Dob) : null;
+                acc.SinhVien.Email = req.Email; acc.SinhVien.FullName = req.FullName ?? "";
+                acc.SinhVien.Dob = ParseDob2(req.Dob);
                 acc.SinhVien.Gender = req.Gender; acc.SinhVien.Phone = req.Phone;
                 acc.SinhVien.Department = req.Department;
                 acc.SinhVien.Class = className; acc.SinhVien.Course = req.Course;
@@ -149,8 +166,8 @@ public class TaiKhoanController(AppDbContext db) : ControllerBase
             {
                 acc.SinhVien = new SinhVien
                 {
-                    FullName = req.FullName, Email = req.Email,
-                    Dob = req.Dob is not null ? DateOnly.Parse(req.Dob) : null,
+                    FullName = req.FullName ?? "", Email = req.Email,
+                    Dob = ParseDob2(req.Dob),
                     Gender = req.Gender, Phone = req.Phone,
                     Department = req.Department, Class = className,
                     Course = req.Course, LopHocId = req.LopHocId
@@ -161,8 +178,8 @@ public class TaiKhoanController(AppDbContext db) : ControllerBase
         {
             if (acc.GiangVien is not null)
             {
-                acc.GiangVien.Email = req.Email; acc.GiangVien.FullName = req.FullName;
-                acc.GiangVien.Dob = req.Dob is not null ? DateOnly.Parse(req.Dob) : null;
+                acc.GiangVien.Email = req.Email; acc.GiangVien.FullName = req.FullName ?? "";
+                acc.GiangVien.Dob = ParseDob2(req.Dob);
                 acc.GiangVien.Gender = req.Gender; acc.GiangVien.Phone = req.Phone;
                 acc.GiangVien.Department = req.Department;
             }
@@ -170,14 +187,25 @@ public class TaiKhoanController(AppDbContext db) : ControllerBase
             {
                 acc.GiangVien = new GiangVien
                 {
-                    FullName = req.FullName, Email = req.Email,
-                    Dob = req.Dob is not null ? DateOnly.Parse(req.Dob) : null,
+                    FullName = req.FullName ?? "", Email = req.Email,
+                    Dob = ParseDob2(req.Dob),
                     Gender = req.Gender, Phone = req.Phone, Department = req.Department
                 };
             }
         }
 
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            var inner = ex.InnerException?.Message ?? ex.Message;
+            if (inner.Contains("Duplicate", StringComparison.OrdinalIgnoreCase) ||
+                inner.Contains("UNIQUE",    StringComparison.OrdinalIgnoreCase))
+                return BadRequest(new { message = "Email đã tồn tại trong hệ thống" });
+            return BadRequest(new { message = "Lỗi lưu dữ liệu: " + inner });
+        }
         return Ok(new { message = "Cập nhật thành công" });
     }
 

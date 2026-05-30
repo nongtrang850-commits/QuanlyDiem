@@ -27,7 +27,13 @@ async function request(method, path, body) {
   });
   if (res.status === 401) { logout(); return null; }
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.message || 'Lỗi không xác định');
+  if (!res.ok) {
+    const msg = data?.message
+      || (data?.errors ? Object.values(data.errors).flat().join('; ') : null)
+      || data?.title
+      || `Lỗi ${res.status}`;
+    throw new Error(msg);
+  }
   return data;
 }
 
